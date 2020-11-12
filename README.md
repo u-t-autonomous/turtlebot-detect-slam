@@ -19,8 +19,8 @@ This repository contains documentation and resources for doing visual SLAM (simu
     - [CUDA installation guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html). Make sure you follow the mandatory post-installation steps!
 
 ### Semantic Segmentation Setup
-- Still deciding on a package to use.
-- [Use this for different CUDA versions? (Pytorch and Tensorflow use different versions)](https://medium.com/@peterjussi/multicuda-multiple-versions-of-cuda-on-one-machine-4b6ccda6faae)
+
+TODO
 
 ### Optional Setup
 
