@@ -8,10 +8,10 @@ This repository contains documentation and resources for doing visual SLAM (simu
 
 - Follow the setup guide in the [ROBOTIS e-manual](https://emanual.robotis.com/docs/en/platform/turtlebot3/setup/#setup).
 
-    - Everything in this repository is tested using Ubuntu 18.04 with ROS Melodic on the Remote PC (I know the guide says to use Kinetic), and the provided Raspbian disk image in the manual ([Section 6.2.1.2](https://emanual.robotis.com/docs/en/platform/turtlebot3/raspberry_pi_3_setup/#install-linux-based-on-raspbian)).
+    - Everything in this repository is tested using Ubuntu 18.04 with ROS Melodic on the Remote PC, and the provided Raspbian disk image in the manual ([Section 6.2.1.2](https://emanual.robotis.com/docs/en/platform/turtlebot3/raspberry_pi_3_setup/#install-linux-based-on-raspbian)).
     - The Remote PC you use should have a somewhat powerful Nvidia GPU if you want the segmentation/detection packages to run at a respectable framerate. 
 
-### YOLO v3 Setup
+### Object Detection Setup - YOLOv3
 
 - Follow installation instructions for the [darknet ROS package](https://github.com/leggedrobotics/darknet_ros).
     - I found [this script](https://github.com/milq/milq/blob/master/scripts/bash/install-opencv.sh) helpful for installing OpenCV.
