@@ -34,7 +34,7 @@ I will probably add some ROS launch files to this repository that automate every
 
 - Start up ROS master. SSH into the turtlebot to start up its sensors and its camera with the following commands.
 
-```roslaunch turtlebot3_example turtlebot3_robot```
+```roslaunch turtlebot3_bringup turtlebot3_robot```
 
 ```roslaunch raspicam_node camerav2_1280x960.launch```
 
