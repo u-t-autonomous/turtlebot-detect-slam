@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+
+# This node subscribes to darknet_ros/bounding_boxes (array of bounding boxes), 
+# and /scan (lidar data). The node publishes to the topic /object_map.
+
+import sys
+import rospy
+import darknet_ros_msgs.msg as darknet
+from sensor_msgs.msg import LaserScan
+
+# Default camera specs (Raspberry Pi Camera Module v2)
+FIELD_OF_VIEW=62.2 # horizontal degrees
+RESOLUTION_WIDTH=1920
+
+class object_map:
+
+    def __init__(self, fov=FIELD_OF_VIEW, total_columns=RESOLUTION_WIDTH):
+        '''Initialize ROS subscriber, camera specs'''
+        self.bounding_boxes = rospy.Subscriber("/darknet_ros/bounding_boxes", darknet.BoundingBoxes, self.b_boxes_callback)
+        self.lidar_data = rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
+        rospy.loginfo("Subscribing to bounding boxes topic /darknet_ros/bounding_boxes")
+        self.total_columns = total_columns
+        self.degrees_per_column = fov/self.total_columns # horizontal degrees
+    
+    def x_pos_to_angle(self, x_coor):
+        '''Converts a pixel's x position to an angle, where zero degrees is directly in front of the camera'''
+        x_origin = self.total_columns/2
+        return (x_coor - x_origin)*self.degrees_per_column
+        
+    def b_boxes_callback(self, data):
+        self.boxes = []
+        for bounding_box in data.bounding_boxes:
+            box = {
+                "class": bounding_box.Class,
+                "id": bounding_box.id,
+                "probability": bounding_box.probability,
+                "min_angle": self.x_pos_to_angle(bounding_box.xmin),
+                "max_angle": self.x_pos_to_angle(bounding_box.xmax)
+            }
+            self.boxes.append(box)
+        rospy.loginfo(str(self.boxes))
+
+    def lidar_callback(self, data):
+        pass
+        
+def main(args):
+    '''Initializes and cleanup ROS node'''
+    slam = object_map()
+    rospy.init_node('object_map', anonymous=True)
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        rospy.loginfo("Shutting down object mapping")
+
+if __name__ == '__main__':
+    main(sys.argv)
