@@ -10,7 +10,7 @@ from sensor_msgs.msg import LaserScan
 
 # Default camera specs (Raspberry Pi Camera Module v2)
 FIELD_OF_VIEW=62.2 # horizontal degrees
-RESOLUTION_WIDTH=1920
+RESOLUTION_WIDTH=1280
 
 class object_map:
 
