@@ -49,6 +49,8 @@ class object_map:
         '''Changes lidar data to a coordinate system where the origin 
         is at the camera instead of the lidar sensor. 0 degrees is in front,
         positive is counter-clockwise.'''
+        if radius <= 0.01:
+            return 0
         theta = angle/180 * math.pi
         x_length = radius * math.sin(theta)
         y_length = radius * math.cos(theta) - DISTANCE_BT_LIDAR_CAM
@@ -58,18 +60,18 @@ class object_map:
         lidar_data = data.ranges
         range_min = data.range_min
         range_max = data.range_max
-        data_to_convert = lidar_data[:math.ceil(self.fov/2)] + lidar_data[-math.ceil(self.fov/2):]
+        data_to_convert = lidar_data[:int(math.ceil(self.fov/2))] + lidar_data[int(math.ceil(self.fov/2)*-1):]
         new_lidar_data = []
-        for i in range(math.ceil(self.fov/2)):
+        for i in range(int(math.ceil(self.fov/2))):
             new_lidar_data.append(self.change_ref_frame(i, data_to_convert[i]))
-        for i in range(-math.ceil(self.fov/2), 0):
+        for i in range(-1*int(math.ceil(self.fov/2)), 0):
             new_lidar_data.append(self.change_ref_frame(i, data_to_convert[i]))
         self.obstacle_locs = []
         if len(self.boxes) > 0:
             for box in self.boxes: 
                 obstacle = box
-                distances = [0 for i in range(obstacle.max_angle-obstacle.min_angle)]
-                for i in range(obstacle.max_angle-obstacle.min_angle):
+                distances = [0 for i in range(abs(int(obstacle["max_angle"]-obstacle["min_angle"])))]
+                for i in range(len(distances)):
                     if new_lidar_data[i] >= range_min and new_lidar_data[i] <= range_max:
                         distances[i] = new_lidar_data[i]
                 obstacle["distances"] = distances
