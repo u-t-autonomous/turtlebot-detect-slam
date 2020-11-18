@@ -6,8 +6,11 @@
 from __future__ import division
 import sys, math
 import rospy
+import cv2
 import darknet_ros_msgs.msg as darknet
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, Image
+from cv_bridge import CvBridge, CvBridgeError
+import random
 
 # Default camera specs (Raspberry Pi Camera Module v2)
 FIELD_OF_VIEW=62.2 # horizontal degrees
@@ -26,12 +29,44 @@ class object_map:
         self.degrees_per_column = fov/self.total_columns # horizontal degrees
         self.boxes = []
         self.obstacle_locs = []
+        '''visualizer'''
+        self.image_sub = rospy.Subscriber("/camera/decompressed", Image, self.image_callback)
+        self.bridge = CvBridge()
+        self.visualizer = rospy.Publisher("/lidar_yolo_visualizer", Image)
     
+    def image_callback(self, data):
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+        i = 0
+        for obstacle in self.obstacle_locs:
+            if i % 3 == 0:
+                color = (255, 0, 255)
+            elif i % 3 == 1:
+                color = (0, 255, 0)
+            elif i % 3 == 2:
+                color = (0, 0, 255)
+            i = i+1
+            for point in obstacle["polar_coords"]:
+                x = self.angle_to_x_pos(point[1])
+                y = 340
+                cv_image[y:y+20, x:x+10] = color
+        try:
+            self.visualizer.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+        except CvBridgeError as e:
+            print(e)
+
+
     def x_pos_to_angle(self, x_coor):
         '''Converts a pixel's x position to an angle, where zero degrees 
            is directly in front of the camera and positive is counter-clockwise'''
         x_origin = self.total_columns/2
         return (x_origin - x_coor)*self.degrees_per_column
+
+    def angle_to_x_pos(self, angle):
+        x_origin = self.total_columns/2
+        return int(round(angle/self.degrees_per_column*-1 + x_origin))    
         
     def b_boxes_callback(self, data):
         self.boxes = []
