@@ -39,8 +39,8 @@ class object_map:
                 "class": bounding_box.Class,
                 "id": bounding_box.id,
                 "probability": bounding_box.probability,
-                "min_angle": math.floor(self.x_pos_to_angle(bounding_box.xmin)),
-                "max_angle": math.ceil(self.x_pos_to_angle(bounding_box.xmax))
+                "min_angle": math.floor(self.x_pos_to_angle(bounding_box.xmax)), # swap xmax and xmin because coordinate system is reversed
+                "max_angle": math.ceil(self.x_pos_to_angle(bounding_box.xmin))
             }
             self.boxes.append(box)
         # rospy.loginfo(str(self.boxes))
@@ -54,27 +54,32 @@ class object_map:
         theta = angle/180 * math.pi
         x_length = radius * math.sin(theta)
         y_length = radius * math.cos(theta) - DISTANCE_BT_LIDAR_CAM
-        return math.sqrt(math.pow(x_length,2) + math.pow(y_length,2))
+        new_radius = math.sqrt(math.pow(x_length,2) + math.pow(y_length,2))
+        new_angle = math.asin(x_length/new_radius)/math.pi*180
+        return new_angle, new_radius
 
     def lidar_callback(self, data):
         lidar_data = data.ranges
         range_min = data.range_min
         range_max = data.range_max
         data_to_convert = lidar_data[:int(math.ceil(self.fov/2))] + lidar_data[int(math.ceil(self.fov/2)*-1):]
-        new_lidar_data = []
+        converted_data = []
         for i in range(int(math.ceil(self.fov/2))):
-            new_lidar_data.append(self.change_ref_frame(i, data_to_convert[i]))
+            converted_data.append(self.change_ref_frame(i, data_to_convert[i]))
         for i in range(-1*int(math.ceil(self.fov/2)), 0):
-            new_lidar_data.append(self.change_ref_frame(i, data_to_convert[i]))
+            converted_data.append(self.change_ref_frame(i, data_to_convert[i]))
+        new_lidar_data = dict(converted_data)
         self.obstacle_locs = []
         if len(self.boxes) > 0:
             for box in self.boxes: 
                 obstacle = box
-                distances = [0 for i in range(abs(int(obstacle["max_angle"]-obstacle["min_angle"])))]
-                for i in range(len(distances)):
-                    if new_lidar_data[i] >= range_min and new_lidar_data[i] <= range_max:
-                        distances[i] = new_lidar_data[i]
-                obstacle["distances"] = distances
+                polar_coords = []
+                for angle, radius in new_lidar_data.items():
+                    if angle >= obstacle["min_angle"] and angle <= obstacle["max_angle"] \
+                        and radius >= self.change_ref_frame(angle, range_min)[1] \
+                            and radius <= self.change_ref_frame(angle, range_max)[1]:
+                        polar_coords.append((angle, radius))
+                obstacle["polar_coords"] = polar_coords
                 self.obstacle_locs.append(obstacle)
         rospy.loginfo(self.obstacle_locs)
 
