@@ -29,8 +29,9 @@ class object_map:
         self.degrees_per_column = fov/self.total_columns # horizontal degrees
         self.boxes = []
         self.obstacle_locs = []
+        self.converted_data = []
         '''visualizer'''
-        self.image_sub = rospy.Subscriber("/camera/decompressed", Image, self.image_callback)
+        self.image_sub = rospy.Subscriber("/darknet_ros/detection_image", Image, self.image_callback)
         self.bridge = CvBridge()
         self.visualizer = rospy.Publisher("/lidar_yolo_visualizer", Image)
     
@@ -40,18 +41,26 @@ class object_map:
         except CvBridgeError as e:
             print(e)
         i = 0
+        y = 340
         for obstacle in self.obstacle_locs:
+            if len(obstacle["polar_coords"]) == 0:
+                continue
             if i % 3 == 0:
                 color = (255, 0, 255)
             elif i % 3 == 1:
                 color = (0, 255, 0)
-            elif i % 3 == 2:
+            else:
                 color = (0, 0, 255)
             i = i+1
             for point in obstacle["polar_coords"]:
                 x = self.angle_to_x_pos(point[1])
-                y = 340
                 cv_image[y:y+20, x:x+10] = color
+
+        # if len(self.converted_data) > 0:
+        #     y = y-10
+        #     for point in self.converted_data:
+        #         x = self.angle_to_x_pos(point[1])
+        #         cv_image[y:y+20, x:x+10] = (255,255,255)
         try:
             self.visualizer.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
         except CvBridgeError as e:
@@ -88,7 +97,7 @@ class object_map:
         if radius <= 0.01:
             return angle, 0
         if angle == 0:
-            return 0, radius - DISTANCE_BT_LIDAR_CAM
+            return 0, max(radius - DISTANCE_BT_LIDAR_CAM, DISTANCE_BT_LIDAR_CAM)
         theta = angle/180 * math.pi
         x_length = radius * math.sin(theta)
         y_length = radius * math.cos(theta) - DISTANCE_BT_LIDAR_CAM
@@ -101,17 +110,17 @@ class object_map:
         range_min = data.range_min
         range_max = data.range_max
         data_to_convert = lidar_data[:int(math.ceil(self.fov/2))] + lidar_data[int(math.ceil(self.fov/2)*-1):]
-        converted_data = []
+        self.converted_data = []
         for i in range(int(math.ceil(self.fov/2))):
-            converted_data.append(self.change_ref_frame(data_to_convert[i], i))
+            self.converted_data.append(self.change_ref_frame(data_to_convert[i], i))
         for i in range(-1*int(math.ceil(self.fov/2)), 0):
-            converted_data.append(self.change_ref_frame(data_to_convert[i], i))
+            self.converted_data.append(self.change_ref_frame(data_to_convert[i], i))
         self.obstacle_locs = []
         if len(self.boxes) > 0:
             for box in self.boxes: 
                 obstacle = box
                 polar_coords = []
-                for radius, angle in converted_data:
+                for radius, angle in self.converted_data:
                     if angle >= obstacle["min_angle"] and angle <= obstacle["max_angle"] \
                         and radius >= self.change_ref_frame(range_min, angle)[0] \
                             and radius <= self.change_ref_frame(range_max, angle)[0]:
