@@ -95,9 +95,9 @@ class object_map:
         is at the camera instead of the lidar sensor. 0 degrees is in front,
         positive is counter-clockwise.'''
         if radius <= 0.01:
-            return angle, 0
+            return 0, angle
         if angle == 0:
-            return 0, max(radius - DISTANCE_BT_LIDAR_CAM, DISTANCE_BT_LIDAR_CAM)
+            return max(radius - DISTANCE_BT_LIDAR_CAM, DISTANCE_BT_LIDAR_CAM), 0
         theta = angle/180 * math.pi
         x_length = radius * math.sin(theta)
         y_length = radius * math.cos(theta) - DISTANCE_BT_LIDAR_CAM
