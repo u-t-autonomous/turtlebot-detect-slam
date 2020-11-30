@@ -10,11 +10,12 @@ import cv2
 import darknet_ros_msgs.msg as darknet
 from sensor_msgs.msg import LaserScan, Image
 from cv_bridge import CvBridge, CvBridgeError
-import random
 
 # Default camera specs (Raspberry Pi Camera Module v2)
 FIELD_OF_VIEW=62.2 # horizontal degrees
-RESOLUTION_WIDTH=1280
+# 1280 for physical turtlebot3, 640 for sim
+# RESOLUTION_WIDTH=1280
+RESOLUTION_WIDTH=640
 DISTANCE_BT_LIDAR_CAM=0.14 # Distance between lidar and camera, in meters
 
 class object_map:
@@ -22,6 +23,7 @@ class object_map:
     def __init__(self, fov=FIELD_OF_VIEW, total_columns=RESOLUTION_WIDTH):
         '''Initialize ROS subscriber, camera specs'''
         self.bounding_boxes = rospy.Subscriber("/darknet_ros/bounding_boxes", darknet.BoundingBoxes, self.b_boxes_callback)
+        self.num_b_boxes = rospy.Subscriber("darknet_ros/found_object", darknet.ObjectCount, self.num_boxes_callback)
         self.lidar_data = rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
         rospy.loginfo("Subscribing to bounding boxes topic /darknet_ros/bounding_boxes")
         self.total_columns = total_columns
@@ -35,13 +37,19 @@ class object_map:
         self.bridge = CvBridge()
         self.visualizer = rospy.Publisher("/lidar_yolo_visualizer", Image)
     
+    def num_boxes_callback(self, data):
+        if data.count == 0:
+            self.boxes = []
+
     def image_callback(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
         i = 0
-        y = 340
+        # 340 for physical turtlebot, 170 for sim
+        # y = 340
+        y = 170
         for obstacle in self.obstacle_locs:
             if len(obstacle["polar_coords"]) == 0:
                 continue
@@ -54,13 +62,17 @@ class object_map:
             i = i+1
             for point in obstacle["polar_coords"]:
                 x = self.angle_to_x_pos(point[1])
-                cv_image[y:y+20, x:x+10] = color
+                cv_image[y:y+20, x:x+5] = color
 
+        # Show all lidar data points on image
         # if len(self.converted_data) > 0:
         #     y = y-10
         #     for point in self.converted_data:
         #         x = self.angle_to_x_pos(point[1])
         #         cv_image[y:y+20, x:x+10] = (255,255,255)
+
+        cv2.imshow('Lidar Yolo Visualizer', cv_image)
+        cv2.waitKey(1)
         try:
             self.visualizer.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
         except CvBridgeError as e:
