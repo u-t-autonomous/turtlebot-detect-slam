@@ -11,7 +11,7 @@ from sensor_msgs.msg import LaserScan
 # Default camera specs (Raspberry Pi Camera Module v2)
 FIELD_OF_VIEW=62.2 # horizontal degrees
 RESOLUTION_WIDTH=1280
-DISTANCE_BT_LIDAR_CAM = 0.14 # Distance between lidar and camera, in meters
+DISTANCE_BT_LIDAR_CAM=0.14 # Distance between lidar and camera, in meters
 
 class object_map:
 

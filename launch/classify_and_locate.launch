@@ -1,0 +1,7 @@
+<launch>
+    <include file="$(find darknet_ros)/launch/yolo_v3.launch"/>
+    <node name="decompress_image" pkg="image_transport" type="republish" args="compressed in:=/raspicam_node/image out:=/camera/decompressed" respawn="true"/>
+    <node name="locate_objects" pkg="visual_slam" type="locate_objects" required="true"/>
+    <!--Uncomment below to use web_video_server-->
+    <!-- <node name="web_video_server" pkg="web_video_server" type="web_video_server"/> -->
+</launch>
