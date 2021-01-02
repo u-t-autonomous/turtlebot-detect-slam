@@ -30,30 +30,20 @@ TODO
 
 # Usage
 
-I will probably add some ROS launch files to this repository that automate everything once I've finalized what packages will be used. 
-
 - Start up ROS master. SSH into the turtlebot to start up its sensors and its camera with the following commands.
 
 ```roslaunch turtlebot3_bringup turtlebot3_robot.launch```
 
 ```roslaunch raspicam_node camerav2_1280x960.launch```
 
-- All of the image processing nodes need messages of type `sensor_msgs/Image`, but enabling the raw footage from the Raspberry Pi's camera has very high latency and low framerate. By default, the node publishes a compressed image (`sensor_msgs/CompressedImage`). To use this compressed image, we need to republish the image as a `sensor_msgs/Image`.
+- Edit the parameters in `darknet_ros/config/ros.yaml` so that the node is subscribed to `/camera/decompressed`
 
-```rosrun image_transport republish compressed in:=/raspicam_node/image out:=/camera/decompressed```
+- Run the launch file.
 
-- You can  name the `out` topic to whatever you want, just make sure all of your image processing packages are subscribed to that topic, not `raspicam_node/image`!
+```roslaunch visual_slam classify_and_locate.launch```
 
-- To make sure your republishing worked, use ROS web video server or `rqt_image_view` to view your `out` topic and you should see the live camera feed from the Turtlebot. 
+## Simulation
 
-### YOLO
+This package also has support for Gazebo simulation, with the [Turtlebot3 Simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations) package as a prerequisite. The launch file opens an empty world by default.
 
-- Edit the parameters in `darknet_ros/config/ros.yaml` so that the node is subscribed to the correct topic. 
-
-- Launch the ROS node.
-
-```roslaunch darknet_ros yolov3.launch```
-
-### Semantic Segmentation
-
-To-do
+```roslaunch visual_slam gazebo_classify_and_locate.launch```
