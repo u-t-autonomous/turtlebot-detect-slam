@@ -8,9 +8,11 @@ import sys, math
 import rospy
 import cv2
 import darknet_ros_msgs.msg as darknet
+from visual_slam.msg import ObjectLocation, ObjectLocations
 from sensor_msgs.msg import LaserScan, Image
 from cv_bridge import CvBridge, CvBridgeError
-
+from copy import deepcopy
+from std_msgs.msg import Header
 # Default camera specs (Raspberry Pi Camera Module v2)
 FIELD_OF_VIEW=62.2 # horizontal degrees
 # 1280 for physical turtlebot3, 640 for sim
@@ -25,7 +27,7 @@ class object_map:
         '''Initialize ROS subscriber, camera specs'''
         self.bounding_boxes = rospy.Subscriber("/darknet_ros/bounding_boxes", darknet.BoundingBoxes, self.b_boxes_callback)
         self.num_b_boxes = rospy.Subscriber("darknet_ros/found_object", darknet.ObjectCount, self.num_boxes_callback)
-        self.lidar_data = rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
+        self.range_data = rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
         rospy.loginfo("Subscribing to bounding boxes topic /darknet_ros/bounding_boxes")
         self.total_columns = total_columns
         self.fov = fov
@@ -33,6 +35,7 @@ class object_map:
         self.boxes = []
         self.obstacle_locs = []
         self.converted_data = []
+        self.publisher = rospy.Publisher("/segmented_lidar_data", ObjectLocations)
         '''visualizer'''
         if view_image:
             self.image_sub = rospy.Subscriber("/darknet_ros/detection_image", Image, self.image_callback)
@@ -96,8 +99,7 @@ class object_map:
         for bounding_box in data.bounding_boxes:
             box = {
                 "class": bounding_box.Class,
-                "id": bounding_box.id,
-                "probability": bounding_box.probability,
+                "confidence": bounding_box.probability,
                 "min_angle": math.floor(self.x_pos_to_angle(bounding_box.xmax)), # swap xmax and xmin because coordinate system is reversed
                 "max_angle": math.ceil(self.x_pos_to_angle(bounding_box.xmin))
             }
@@ -120,10 +122,10 @@ class object_map:
         return new_radius, new_angle
 
     def lidar_callback(self, data):
-        lidar_data = data.ranges
+        range_data = data.ranges
         range_min = data.range_min
         range_max = data.range_max
-        data_to_convert = lidar_data[:int(math.ceil(self.fov/2))] + lidar_data[int(math.ceil(self.fov/2)*-1):]
+        data_to_convert = range_data[:int(math.ceil(self.fov/2))] + range_data[int(math.ceil(self.fov/2)*-1):]
         self.converted_data = []
         for i in range(int(math.ceil(self.fov/2))):
             self.converted_data.append(self.lidar_frame_to_camera(data_to_convert[i], i) + (i,))
@@ -173,7 +175,28 @@ class object_map:
                                 obstacle_loc["polar_coords"].difference_update(shared_angles)
                 obstacle["polar_coords"] = polar_coords
                 self.obstacle_locs.append(obstacle)
-        rospy.loginfo(self.obstacle_locs)
+        # Generate and publish message
+        message = ObjectLocations()
+        locations = []
+        for obstacle in self.obstacle_locs:
+            location = ObjectLocation()
+            scan_data = deepcopy(data) # copy data to scan_data
+            ranges = [0 for i in range(360)]
+            # rospy.loginfo(obstacle["class"] + ":" + str(obstacle["polar_coords"]))
+            for coord in obstacle["polar_coords"]:
+                ranges[coord[2]] = range_data[coord[2]]
+            scan_data.ranges = ranges
+            location.scan_data = scan_data
+            location.object_class = obstacle["class"]
+            location.confidence = obstacle["confidence"]
+            locations.append(location)
+        message.obj_locations = locations
+        h = Header()
+        h.stamp = rospy.Time.now()
+        message.header = h
+        self.publisher.publish(message)
+
+        # rospy.loginfo(self.obstacle_locs)
 
 
         

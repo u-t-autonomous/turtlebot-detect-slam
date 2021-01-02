@@ -1,3 +1,3 @@
-string class
-float64 probability
+string object_class
+float64 confidence
 sensor_msgs/LaserScan scan_data
