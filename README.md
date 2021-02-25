@@ -1,4 +1,4 @@
-# turtlebot-visual-slam
+# turtlebot-detect-slam
 
 This repository contains documentation and resources for doing visual SLAM (simultaneous localization and mapping) on a [TurtleBot3 Waffle Pi](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/) and ROS. This repository is a work in progress and will be constantly changing as I research and experiment with different packages and tools. 
 
