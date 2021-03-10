@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This node subscribes to darknet_ros/bounding_boxes (array of bounding boxes), 
 # and /scan (lidar data). The node publishes to the topic /object_map.
@@ -16,8 +16,8 @@ from std_msgs.msg import Header
 # Default camera specs (Raspberry Pi Camera Module v2)
 FIELD_OF_VIEW=62.2 # horizontal degrees
 # 1280 for physical turtlebot3, 640 for sim
-# RESOLUTION_WIDTH=1280
-RESOLUTION_WIDTH=640
+RESOLUTION_WIDTH=1280
+# RESOLUTION_WIDTH=640
 DISTANCE_BT_LIDAR_CAM=0.14 # Distance between lidar and camera, in meters
 
 class object_map:
