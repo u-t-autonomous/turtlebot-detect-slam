@@ -1,7 +1,7 @@
 <launch>
 	<arg name="enable_image" default="true"/>
     <include file="$(find darknet_ros)/launch/yolo_v3.launch"/>
-    <node name="decompress_image" pkg="image_transport" type="republish" args="compressed in:=/raspicam_node/image out:=/camera/decompressed" respawn="true"/>
+    <node name="decompress_image" pkg="image_transport" type="republish" args="compressed in:=/raspicam_node/image out:=/camera/rgb/image_raw" respawn="true"/>
     <node name="locate_objects" pkg="visual_slam" type="locate_objects" required="true">
     	<param name="enable_image" value="$(arg enable_image)" type="bool"/>
     </node>
