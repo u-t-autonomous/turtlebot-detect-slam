@@ -54,7 +54,7 @@ class object_map:
         i = 0
         # 340 for physical turtlebot, 170 for sim
         # y = 340
-        y = 170
+        # y = 170
         for obstacle in self.obstacle_locs:
             if len(obstacle["polar_coords"]) == 0:
                 continue
@@ -67,7 +67,8 @@ class object_map:
             i = i+1
             for point in obstacle["polar_coords"]:
                 x = self.angle_to_x_pos(point[1])
-                cv_image[y:y+20, x:x+5] = color
+                y = int(obstacle["y_center"])
+                cv_image[y-15:y+15, x-5:x+5] = color
 
         # Show all lidar data points on image
         # if len(self.converted_data) > 0:
@@ -101,7 +102,8 @@ class object_map:
                 "class": bounding_box.Class,
                 "confidence": bounding_box.probability,
                 "min_angle": math.floor(self.x_pos_to_angle(bounding_box.xmax)), # swap xmax and xmin because coordinate system is reversed
-                "max_angle": math.ceil(self.x_pos_to_angle(bounding_box.xmin))
+                "max_angle": math.ceil(self.x_pos_to_angle(bounding_box.xmin)),
+                "y_center": (bounding_box.ymin+bounding_box.ymax)/2
             }
             self.boxes.append(box)
         # rospy.loginfo(str(self.boxes))
@@ -186,6 +188,7 @@ class object_map:
             for coord in obstacle["polar_coords"]:
                 ranges[coord[2]] = range_data[coord[2]]
             scan_data.ranges = ranges
+            scan_data.intensities = [0 for i in range(360)]
             location.scan_data = scan_data
             location.object_class = obstacle["class"]
             location.confidence = obstacle["confidence"]
