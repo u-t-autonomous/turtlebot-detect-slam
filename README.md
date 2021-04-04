@@ -35,7 +35,7 @@ This repository contains documentation and resources for doing visual SLAM (simu
 
 ```roslaunch visual_slam classify_and_locate.launch```
 
-- To use [custom weights](https://github.com/leggedrobotics/darknet_ros#use-your-own-detection-objects), either edit `yolo_v3.launch` in the `darknet_ros` package or make a new launch file that points to the proper weights/configuration files.
+- To use [custom weights](https://github.com/leggedrobotics/darknet_ros#use-your-own-detection-objects), either edit `yolo_v3.launch` in the `darknet_ros` package or make a new launch file that points to the proper weights/configuration files. Make sure to edit the launch file in this package to point to the new `darknet_ros` launch files as well.
 
 ## Simulation
 
