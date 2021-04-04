@@ -45,18 +45,18 @@ This package also has support for Gazebo simulation, with the [Turtlebot3 Simula
 
 # Classes in weights files
 
-bevo.weights 
+`bevo.weights` 
 
-    - bevo
+- bevo
 
-turtlebot.weights 
+`turtlebot.weights`
 
-    - turtlebot_burger
+- turtlebot_burger
 
-multiclass.weights
+`multiclass.weights`
 
-    - box
-    - bevo
-    - bottle
-    - footwear
-    - turtlebot
+- box
+- bevo
+- bottle
+- footwear
+- turtlebot
