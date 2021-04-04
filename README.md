@@ -43,11 +43,18 @@ This package also has support for Gazebo simulation, with the [Turtlebot3 Simula
 
 ```roslaunch visual_slam gazebo_classify_and_locate.launch```
 
-# Weights files
+# Classes in weights files
 
-bevo.weights - Bevo figurine only
-turtlebot.weights - Turtlebot_burger only
+bevo.weights 
+
+    - bevo
+
+turtlebot.weights 
+
+    - turtlebot_burger
+
 multiclass.weights
+
     - box
     - bevo
     - bottle
