@@ -60,3 +60,12 @@ This package also has support for Gazebo simulation, with the [Turtlebot3 Simula
 - bottle
 - footwear
 - turtlebot
+
+`multiclass-v3.weights`
+
+Updated version of `multiclass.weights` (no footwear)
+
+- box
+- bevo
+- bottle
+- turtlebot
